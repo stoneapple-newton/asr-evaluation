@@ -224,7 +224,7 @@ uv run python -m codex_version.cli history --gt sample_meeting
 Shows segment-level scores for the latest result of a run:
 
 ```powershell
-uv run python -m codex_version.cli show sample_meeting_v1
+uv run python -m codex_version.cli show sample_meeting_v1pdate required
 ```
 
 ### `compare`
