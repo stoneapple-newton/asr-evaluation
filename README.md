@@ -24,6 +24,7 @@ The main implementation for this version lives in `codex_version/`.
 │   ├── aligner.py                # Segment alignment logic
 │   ├── embedder.py               # Ollama embedding client
 │   ├── scorer.py                 # Cosine similarity and total SSS
+│   ├── evaluators.py             # WER/CER/MER/WIP/WIL ASR metrics
 │   ├── storage.py                # Filesystem persistence
 │   ├── models.py                 # Pydantic data models
 │   ├── README.md                 # Codex-version specific notes
@@ -224,7 +225,7 @@ uv run python -m codex_version.cli history --gt sample_meeting
 Shows segment-level scores for the latest result of a run:
 
 ```powershell
-uv run python -m codex_version.cli show sample_meeting_v1
+uv run python -m codex_version.cli show sample_meeting_v1pdate required
 ```
 
 ### `compare`
@@ -286,8 +287,9 @@ Important fields:
 4. If one side has more chunks, adjacent short chunks are merged until counts match.
 5. Each aligned ground-truth/transcription pair is embedded with Ollama.
 6. Segment SSS is cosine similarity between the two embedding vectors.
-7. Total SSS is a weighted average of segment scores, weighted by aligned text length.
-8. A timestamped JSON result is saved under `codex_version/data/results`.
+7. Lexical ASR evaluators are computed for each aligned segment: WER, CER, MER, WIP, and WIL.
+8. Total SSS is a weighted average of segment scores, weighted by aligned text length.
+9. A timestamped JSON result is saved under `codex_version/data/results`.
 
 Scores are in the range `0.0` to `1.0`, where higher means the transcription segment is semantically closer to the ground-truth segment.
 
@@ -309,7 +311,8 @@ Each result includes:
 - Total SSS
 - Segment count
 - Original metadata
-- Segment-level aligned text and SSS
+- Segment-level aligned text, SSS, and lexical evaluator metrics
+- Overall WER, CER, MER, WIP, and WIL evaluator totals
 
 Because each run is timestamped, repeated runs are preserved for history instead of overwritten.
 
@@ -348,7 +351,7 @@ For each new transcription version:
 
 - The current alignment strategy is simple: it aligns by chunk order and merges adjacent chunks to equalize counts.
 - This works best when the transcription generally follows the same order as the ground truth.
-- It is semantic similarity, not word error rate.
+- SSS is semantic similarity, while the added evaluators report exact lexical error metrics such as WER and CER.
 - High SSS does not guarantee exact wording, punctuation, speaker labels, or timestamps.
 - Low segment SSS can identify areas worth manual review.
 

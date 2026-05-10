@@ -18,6 +18,7 @@ from codex_version.config import (
     TRANSCRIPTION_DIR,
 )
 from codex_version.embedder import OllamaEmbedder
+from codex_version.evaluators import aggregate_asr, evaluate_asr
 from codex_version.models import AlignmentSegment, RunMetadata, SSSResult
 from codex_version.scorer import cosine_similarity, total_sss
 from codex_version.storage import (
@@ -97,7 +98,11 @@ def run(
     )
     aligned = align_chunks(gt_chunks, tx_chunks)
 
-    console.print(f"Chunks: ground_truth={len(gt_chunks)} transcription={len(tx_chunks)} aligned={len(aligned)}")
+    console.print(
+        f"Chunks: ground_truth={len(gt_chunks)} "
+        f"transcription={len(tx_chunks)} "
+        f"aligned={len(aligned)}"
+    )
     console.print(f"Embedding with Ollama model: {embed_model}")
 
     embedder = OllamaEmbedder(base_url=ollama_url, model=embed_model)
@@ -105,6 +110,8 @@ def run(
     tx_embeddings = embedder.embed([pair[1] for pair in aligned])
     scores = [cosine_similarity(gt, tx) for gt, tx in zip(gt_embeddings, tx_embeddings)]
     weights = [max(len(gt), len(tx)) for gt, tx in aligned]
+    lexical_evaluations = [evaluate_asr(gt, tx) for gt, tx in aligned]
+    evaluator_totals = aggregate_asr(lexical_evaluations).rounded()
 
     segments = [
         AlignmentSegment(
@@ -114,8 +121,12 @@ def run(
             ground_truth_chars=len(gt),
             transcription_chars=len(tx),
             sss=round(score, 6),
+            evaluators=evaluation.rounded(),
         )
-        for index, ((gt, tx), score) in enumerate(zip(aligned, scores), start=1)
+        for index, ((gt, tx), score, evaluation) in enumerate(
+            zip(aligned, scores, lexical_evaluations),
+            start=1,
+        )
     ]
     result = SSSResult(
         run_id=metadata.run_id,
@@ -127,12 +138,18 @@ def run(
         max_chars_per_chunk=metadata.max_chars_per_chunk,
         recorded_at=utc_now(),
         total_sss=round(total_sss(scores, weights), 6),
+        evaluator_totals=evaluator_totals,
         segment_count=len(segments),
         metadata=metadata.model_dump(mode="json"),
         segments=segments,
     )
     path = save_result(result)
     console.print(f"Total SSS: {result.total_sss:.6f}")
+    console.print(
+        f"WER: {result.evaluator_totals.get('wer', 0.0):.6f}  "
+        f"CER: {result.evaluator_totals.get('cer', 0.0):.6f}  "
+        f"WIL: {result.evaluator_totals.get('wil', 0.0):.6f}"
+    )
     console.print(f"Saved: {path}")
 
 
@@ -175,6 +192,7 @@ def history(
     table.add_column("Model")
     table.add_column("Segments", justify="right")
     table.add_column("Total SSS", justify="right")
+    table.add_column("WER", justify="right")
     for row in rows:
         table.add_row(
             row["run_id"],
@@ -184,6 +202,7 @@ def history(
             row["model"],
             str(row["segments"]),
             f"{row['total_sss']:.6f}",
+            f"{row.get('wer', 0.0):.6f}",
         )
     console.print(table)
 
@@ -195,16 +214,27 @@ def show(run_id: Annotated[str, typer.Argument(help="Run ID to display.")]) -> N
     table = Table(title=f"{result.run_id} total={result.total_sss:.6f}")
     table.add_column("#", justify="right")
     table.add_column("SSS", justify="right")
+    table.add_column("WER", justify="right")
+    table.add_column("CER", justify="right")
     table.add_column("Ground Truth")
     table.add_column("Transcription")
     for segment in result.segments:
         table.add_row(
             str(segment.segment_index),
             f"{segment.sss:.6f}",
+            f"{segment.evaluators.get('wer', 0.0):.6f}",
+            f"{segment.evaluators.get('cer', 0.0):.6f}",
             _preview(segment.ground_truth_text),
             _preview(segment.transcription_text),
         )
     console.print(table)
+    if result.evaluator_totals:
+        console.print(
+            f"Totals: WER={result.evaluator_totals.get('wer', 0.0):.6f} "
+            f"CER={result.evaluator_totals.get('cer', 0.0):.6f} "
+            f"MER={result.evaluator_totals.get('mer', 0.0):.6f} "
+            f"WIL={result.evaluator_totals.get('wil', 0.0):.6f}"
+        )
 
 
 @app.command()
@@ -223,7 +253,11 @@ def compare(
     max_segments = max(len(baseline.segments), len(candidate.segments))
     for index in range(max_segments):
         base_score = baseline.segments[index].sss if index < len(baseline.segments) else 0.0
-        cand_score = candidate.segments[index].sss if index < len(candidate.segments) else 0.0
+        cand_score = (
+            candidate.segments[index].sss
+            if index < len(candidate.segments)
+            else 0.0
+        )
         table.add_row(
             str(index + 1),
             f"{base_score:.6f}",
@@ -236,6 +270,21 @@ def compare(
         f"{candidate.run_id}={candidate.total_sss:.6f} "
         f"delta={candidate.total_sss - baseline.total_sss:+.6f}"
     )
+    if baseline.evaluator_totals or candidate.evaluator_totals:
+        baseline_wer = float(baseline.evaluator_totals.get("wer", 0.0))
+        candidate_wer = float(candidate.evaluator_totals.get("wer", 0.0))
+        baseline_cer = float(baseline.evaluator_totals.get("cer", 0.0))
+        candidate_cer = float(candidate.evaluator_totals.get("cer", 0.0))
+        console.print(
+            f"WER: {baseline.run_id}={baseline_wer:.6f} "
+            f"{candidate.run_id}={candidate_wer:.6f} "
+            f"delta={candidate_wer - baseline_wer:+.6f}"
+        )
+        console.print(
+            f"CER: {baseline.run_id}={baseline_cer:.6f} "
+            f"{candidate.run_id}={candidate_cer:.6f} "
+            f"delta={candidate_cer - baseline_cer:+.6f}"
+        )
 
 
 def _preview(text: str, width: int = 80) -> str:

@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "manifest.schema.json",
+  "title": "ASR Eval Dataset Manifest Entry",
+  "description": "One line of the JSONL manifest file describing a single evaluation sample.",
+  "type": "object",
+  "required": ["sample_id", "dataset_version", "audio", "reference"],
+  "additionalProperties": true,
+  "properties": {
+    "sample_id": {
+      "type": "string",
+      "description": "Globally unique identifier for this sample."
+    },
+    "dataset_version": {
+      "type": "string",
+      "description": "Dataset version string, e.g. gold_v1."
+    },
+    "audio": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "Absolute or relative path or remote URI to the audio file."
+        },
+        "duration_sec": {
+          "type": ["number", "null"],
+          "description": "Audio duration in seconds."
+        },
+        "sample_rate_hz": {
+          "type": ["integer", "null"],
+          "description": "Audio sample rate in Hz."
+        },
+        "channels": {
+          "type": ["integer", "null"],
+          "description": "Number of audio channels."
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Full ground-truth transcript text."
+        },
+        "segments": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["start", "end", "text"],
+            "properties": {
+              "start":   { "type": "number" },
+              "end":     { "type": "number" },
+              "speaker": { "type": "string" },
+              "text":    { "type": "string" }
+            }
+          },
+          "description": "Optional segment-level references with timestamps and speaker labels."
+        }
+      }
+    },
+    "tags": {
+      "type": "object",
+      "properties": {
+        "domain":       { "type": "string",  "description": "e.g. support, meeting, medical" },
+        "language":     { "type": "string",  "description": "BCP-47 language tag, e.g. en-US" },
+        "num_speakers": { "type": "integer" },
+        "overlap":      { "type": "string",  "enum": ["none", "low", "medium", "high"] },
+        "noise":        { "type": "string",  "enum": ["clean", "low", "medium", "high"] },
+        "source":       { "type": "string",  "description": "e.g. microphone, phone, video_conf" }
+      }
+    },
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Free-text annotation notes."
+    }
+  }
+}
