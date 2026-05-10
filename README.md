@@ -353,3 +353,119 @@ For each new transcription version:
 - Low segment SSS can identify areas worth manual review.
 
 Future improvements could include dynamic-programming alignment, speaker-aware chunking, timestamp-aware alignment, embedding cache persistence, CSV export, and HTML reports.
+
+---
+
+## `claude_version` — Current Implementation
+
+`claude_version` is the latest iteration of this project, available as the `claude-sss` CLI command.
+
+### What's Different
+
+| Feature | `codex_version` | `claude_version` |
+|---|---|---|
+| CLI command | `codex-sss` | `claude-sss` |
+| Data location | `codex_version/data/` | `claude_version/data/` |
+| `new-run` YAML | Minimal fields | Fully annotated with inline comments |
+| Embedding progress | Silent | Live progress bar |
+| `history` filtering | `--gt` only | `--gt` and `--tx` |
+| Score colouring | None | Green ≥ 0.8 / yellow ≥ 0.5 / red < 0.5 |
+
+### Layout
+
+```text
+claude_version/
+├── cli.py
+├── chunker.py
+├── aligner.py
+├── embedder.py
+├── scorer.py
+├── storage.py
+├── models.py
+└── data/
+    ├── ground_truth/
+    ├── transcriptions/
+    ├── runs/
+    └── results/
+```
+
+### Quick Start
+
+```powershell
+# Create data folders
+uv run claude-sss init
+
+# Scaffold a run metadata YAML, then edit it
+uv run claude-sss new-run --run-id meeting_v1 --gt meeting --tx meeting_v1 --location "conference_room_A"
+
+# Run SSS
+uv run claude-sss run meeting_v1
+
+# Inspect
+uv run claude-sss show meeting_v1
+uv run claude-sss history --gt meeting
+uv run claude-sss compare meeting_v1 meeting_v2
+```
+
+### CLI Commands
+
+| Command    | Description                                              |
+|------------|----------------------------------------------------------|
+| `init`     | Create data folders                                      |
+| `new-run`  | Scaffold an annotated YAML metadata file                 |
+| `run`      | Run SSS pipeline and save a timestamped result           |
+| `list`     | List ground_truth / transcriptions / runs / results      |
+| `show`     | Segment-level SSS table for a run                        |
+| `history`  | All historic results, filterable by `--gt` and `--tx`    |
+| `compare`  | Segment-by-segment delta between two runs                |
+
+### `new-run` Options
+
+| Option       | Description                                | Default            |
+|--------------|--------------------------------------------|--------------------|
+| `--run-id`   | Unique run ID (required)                   |                    |
+| `--gt`       | Ground-truth file stem (required)          |                    |
+| `--tx`       | Transcription file stem (required)         |                    |
+| `--model`    | Ollama embedding model                     | `nomic-embed-text` |
+| `--strategy` | `sentence_window` \| `sentence` \| `paragraph` | `sentence_window` |
+| `--location` | Where the audio was recorded               |                    |
+| `--notes`    | Free-form notes                            |                    |
+
+### Generated YAML
+
+`new-run` writes a fully annotated YAML ready to edit:
+
+```yaml
+# SSS run metadata — edit before running
+run_id: meeting_v1
+ground_truth_id: meeting
+transcription_id: meeting_v1
+
+# Embedding
+model: nomic-embed-text
+chunk_strategy: sentence_window   # sentence_window | sentence | paragraph
+target_sentences_per_chunk: 3
+max_chars_per_chunk: 900
+
+# Context
+location: conference_room_A
+recorded_at: null                 # ISO8601 timestamp of the recording
+notes: null
+
+# ASR / transcription settings — fill in as needed
+settings:
+  asr_model: ''           # e.g. whisper-large-v3
+  language: ''            # e.g. en
+  prompt: ''              # prompt given to ASR, if any
+  audio_source: ''        # e.g. microphone, phone_call, video_conference
+```
+
+### Result Files
+
+Result files are saved as JSON under `claude_version/data/results/`:
+
+```text
+{ground_truth_id}__{transcription_id}__{run_id}__{timestamp}.json
+```
+
+Each run appends a new file, so the full history is always preserved.
