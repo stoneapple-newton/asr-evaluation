@@ -13,6 +13,7 @@ codex_version/
 ├── aligner.py
 ├── embedder.py
 ├── scorer.py
+├── evaluators.py
 ├── storage.py
 ├── models.py
 └── data/
@@ -32,5 +33,7 @@ uv run python -m codex_version.cli history --gt sample_meeting
 uv run python -m codex_version.cli show sample_meeting_v1
 uv run python -m codex_version.cli compare sample_meeting_v1 sample_meeting_v2
 ```
+
+Results now include deterministic ASR evaluators alongside semantic SSS: word error rate (WER), character error rate (CER), match error rate (MER), word information preserved (WIP), and word information lost (WIL).
 
 Ollama must be running with an embedding model such as `nomic-embed-text`.

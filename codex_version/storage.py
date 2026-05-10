@@ -78,6 +78,9 @@ def history_rows() -> list[dict[str, Any]]:
                 "recorded_at": result.recorded_at,
                 "model": result.model,
                 "total_sss": result.total_sss,
+                "wer": result.evaluator_totals.get("wer", 0.0),
+                "cer": result.evaluator_totals.get("cer", 0.0),
+                "wil": result.evaluator_totals.get("wil", 0.0),
                 "segments": result.segment_count,
                 "path": path,
             }

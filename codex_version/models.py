@@ -29,6 +29,7 @@ class AlignmentSegment(BaseModel):
     ground_truth_chars: int
     transcription_chars: int
     sss: float
+    evaluators: dict[str, float | int] = Field(default_factory=dict)
 
 
 class SSSResult(BaseModel):
@@ -41,6 +42,7 @@ class SSSResult(BaseModel):
     max_chars_per_chunk: int
     recorded_at: datetime
     total_sss: float
+    evaluator_totals: dict[str, float | int] = Field(default_factory=dict)
     segment_count: int
     metadata: dict[str, Any]
     segments: list[AlignmentSegment]
