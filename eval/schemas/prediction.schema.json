@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "prediction.schema.json",
+  "title": "ASR Eval Prediction Record",
+  "description": "One line of predictions.jsonl — per-sample pipeline output.",
+  "type": "object",
+  "required": ["sample_id", "audio_uri", "stage", "elapsed_sec"],
+  "properties": {
+    "sample_id":   { "type": "string" },
+    "audio_uri":   { "type": "string" },
+    "stage":       { "type": "string", "enum": ["baseline", "llm_fixed_input", "end_to_end"] },
+    "elapsed_sec": { "type": "number" },
+    "error":       { "type": ["string", "null"] },
+    "sss":         { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+    "prediction": {
+      "type": ["object", "null"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Full hypothesis transcript text."
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start":   { "type": "number" },
+              "end":     { "type": "number" },
+              "text":    { "type": "string" },
+              "speaker": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "diarization": {
+          "type": "object",
+          "properties": {
+            "segments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["start", "end", "speaker"],
+                "properties": {
+                  "start":   { "type": "number" },
+                  "end":     { "type": "number" },
+                  "speaker": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "token_usage": {
+          "type": ["object", "null"],
+          "properties": {
+            "tokens_in":  { "type": "integer" },
+            "tokens_out": { "type": "integer" }
+          }
+        }
+      }
+    }
+  }
+}

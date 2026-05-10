@@ -1,0 +1,46 @@
+# -----------------------------------------------------------------------
+# Baseline evaluation config: ASR + Diarization only (no LLM)
+# -----------------------------------------------------------------------
+dataset_version: gold_v1
+
+models:
+  asr:
+    name: whisper-large-v3
+    provider: local          # local | api
+    device: cuda:0           # cuda:0 | cpu | mps
+    precision: float16
+  diarization:
+    name: pyannote/speaker-diarization-3.1
+    provider: hf             # hf | local | none
+    device: cuda:0
+  llm: null
+
+decoding_params:
+  beam_size: 5
+  temperature: 0.0
+  no_speech_threshold: 0.6
+  compression_ratio_threshold: 2.4
+  language: en
+
+diarization_params:
+  collar_sec: 0.25
+  skip_overlap: false
+  min_speakers: null         # null = auto-detect
+  max_speakers: null
+
+# SSS metric settings (requires Ollama running locally)
+sss:
+  enabled: true
+  ollama_url: http://localhost:11434
+  model: nomic-embed-text
+  chunk_strategy: sentence_window
+  target_sentences: 3
+  max_chars: 900
+
+cost_config:
+  gpu_hourly_rate_usd: 0.0   # fill in to track GPU cost
+  llm_price_per_1k_in: 0.0
+  llm_price_per_1k_out: 0.0
+  notes: "Update prices before cost-tracking runs"
+
+notes: null

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "score.schema.json",
+  "title": "ASR Eval Score Record",
+  "description": "One line of scores.jsonl — per-sample metrics and failure tags.",
+  "type": "object",
+  "required": ["sample_id"],
+  "properties": {
+    "sample_id":    { "type": "string" },
+    "error":        { "type": ["string", "null"] },
+    "failure_tags": { "type": "array", "items": { "type": "string" } },
+    "metrics": {
+      "type": ["object", "null"],
+      "properties": {
+        "wer":                   { "type": "number", "minimum": 0.0 },
+        "cer":                   { "type": "number", "minimum": 0.0 },
+        "missing_content_rate":  { "type": "number", "minimum": 0.0 },
+        "hallucination_rate":    { "type": "number", "minimum": 0.0 },
+        "sss":                   { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "der":                   { "type": ["number", "null"], "minimum": 0.0 },
+        "speaker_count_delta":   { "type": ["integer", "null"] },
+        "elapsed_sec":           { "type": "number", "minimum": 0.0 },
+        "rtf":                   { "type": ["number", "null"], "minimum": 0.0 }
+      }
+    },
+    "counts": {
+      "type": ["object", "null"],
+      "properties": {
+        "wer": {
+          "type": "object",
+          "properties": {
+            "substitutions": { "type": "integer" },
+            "deletions":     { "type": "integer" },
+            "insertions":    { "type": "integer" },
+            "ref_len":       { "type": "integer" }
+          }
+        },
+        "cer": {
+          "type": "object",
+          "properties": {
+            "substitutions": { "type": "integer" },
+            "deletions":     { "type": "integer" },
+            "insertions":    { "type": "integer" },
+            "ref_len":       { "type": "integer" }
+          }
+        }
+      }
+    }
+  }
+}

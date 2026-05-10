@@ -11,6 +11,20 @@ dependencies = [
     "httpx>=0.27.0",
     "numpy>=1.24.0",
     "rich>=13.0",
+    # eval pipeline
+    "jinja2>=3.1.0",
+]
+
+[project.optional-dependencies]
+# Install for production-grade DER scoring (requires torch)
+diarization = [
+    "pyannote.core>=5.0",
+    "pyannote.metrics>=3.2",
+]
+# Install for running all tests
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
 ]
 
 [tool.uv]
@@ -20,8 +34,13 @@ package = true
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
 [tool.hatch.build.targets.wheel]
-packages = ["kimi", "codex_version", "claude_version"]
+packages = ["kimi", "codex_version", "claude_version", "eval"]
 
 [project.scripts]
 kimi = "kimi.cli:app"
