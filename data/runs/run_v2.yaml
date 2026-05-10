@@ -1,0 +1,12 @@
+run_id: sample_meeting_v2
+ground_truth_id: sample_meeting
+transcription_id: sample_meeting_v2
+model: nomic-embed-text
+chunk_strategy: sentence
+settings:
+  asr_engine: whisper-v2
+  language: en
+  temperature: 0.2
+location: Conference Room A
+recorded_at: 2026-05-10T10:00:00
+notes: Second pass with improved model and slight temperature increase

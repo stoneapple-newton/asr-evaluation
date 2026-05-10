@@ -1,0 +1,12 @@
+run_id: sample_meeting_v1
+ground_truth_id: sample_meeting
+transcription_id: sample_meeting_v1
+model: nomic-embed-text
+chunk_strategy: sentence
+settings:
+  asr_engine: whisper-v1
+  language: en
+  temperature: 0.0
+location: Conference Room A
+recorded_at: 2026-05-10T09:00:00
+notes: First pass transcription with default settings

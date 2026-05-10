@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+wheels/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv
+uv.lock
+
+# Test & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Type checkers
+.mypy_cache/
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSS data — results are historic artifacts; exclude from source control
+# Drop these lines if you want to commit sample data
+*/data/results/*.json
+*/data/runs/*.yaml
+
+# But keep the directory skeletons
+!*/data/results/.gitkeep
+!*/data/runs/.gitkeep
+!*/data/ground_truth/.gitkeep
+!*/data/transcriptions/.gitkeep

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from claude_version import cli; print\\('imports OK'\\)\")",
+      "Bash(uv sync *)",
+      "Bash(uv run *)"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+[project]
+name = "sss"
+version = "0.1.0"
+description = "Sentence Similarity Score (SSS) evaluation system"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "typer[all]>=0.12.0",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "httpx>=0.27.0",
+    "numpy>=1.24.0",
+    "rich>=13.0",
+]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kimi", "codex_version", "claude_version"]
+
+[project.scripts]
+kimi = "kimi.cli:app"
+codex-sss = "codex_version.cli:app"
+claude-sss = "claude_version.cli:app"
